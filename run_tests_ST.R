@@ -130,7 +130,7 @@ write.csv(nn_spatial, paste("nn_spatial_scores_", letter, ".csv", sep=""), row.n
 
 roc_nn_spatial <- vector(mode = "list", length = 16)
 for (i in 1:16) {
-  roc_nn_spatial[[i]] <- f1_beta(nn_spatial[,i], truth, 0.5,  gsea_raw)
+  roc_nn_spatial[[i]] <- f1_beta(truth, nn_spatial[,i])
   
 }
 
