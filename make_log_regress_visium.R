@@ -1,5 +1,6 @@
 library(pscl)
 
+#read data
 truth <- readRDS("~/score_smoothing/truth.Rds")
 
 gsea_raw <-read.csv("~/BA/images Visium/raw.csv", row.names=1)
@@ -7,9 +8,13 @@ gsea_raw <- as.data.frame(gsea_raw)
 
 gsea_raw <- cbind(truth, gsea_raw)
 colnames(gsea_raw) <- c("truth","gsea")
+
+#calculate logistic regression model +R² for raw scores
 log_model <- glm(truth ~ gsea, data = gsea_raw, family = "binomial")
 r_raw <- pR2(log_model)
 write.csv(r_raw, "~/BA/images Visium/R2/raw_R2.csv")
+
+#calcute log regression model + R² for other methods
 l <- c("nn", "spatial", "union", "snn", "inter_snn")
 for (method in l) {
   temp <- read.csv(paste("~/BA/images Visium/", method, "_scores.csv", sep=""), row.names = 1)
@@ -39,6 +44,8 @@ for (method in l) {
   }
   write.csv(model_temp, paste("~/BA/images Visium/R2/", method, "_R2.csv", sep=""))
 }
+
+#calculate ROC + plots
 l <- c("nn", "spatial", "union", "snn", "inter_snn", "raw")
 rocs <- NULL
 for (method in l) {
