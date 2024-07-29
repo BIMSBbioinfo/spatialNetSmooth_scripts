@@ -14,7 +14,7 @@ E1 and H1.
 
 # How to use:
 ### Reproduce Spatial plots for Visium dataset:
-Run "run_tests.R" and specify input and output directory. After that run "calc_R2_spatialplots.R" and look inside the "_R2.csv"-files to find the best smoothing parameters for each method. Then, the column from the score dataframe can be selected in the script and used for plotting.
+Run "run_tests.R" and specify input and output directory. After that run "calc_R2_spatialplots_visium.R" and look inside the "_R2.csv"-files to find the best smoothing parameters for each method. Then, the column from the score dataframe can be selected in the script and used for plotting.
 
 ### Reproduce Spatial plots for ST dataset: 
 Run "run_tests_ST.R" for each sample and change "letter" to the current sample. Specify input and output directory. In the output directory, there should be folders named like the samples (e.g. "A1").
