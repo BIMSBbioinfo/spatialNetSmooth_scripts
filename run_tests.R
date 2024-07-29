@@ -1,24 +1,74 @@
 library(tidyr)
 library(reshape2)
 library(Seurat)
+
+#load package (if not installed)
 setwd("~/spatialNetSmooth/")
 devtools::load_all()
 #Run SpatialNetSmooth on Visium-Data
-setwd("~/score_smoothing/For_Rahel (1)")
-coord_tab = read.csv('V1_Breast_Cancer_Block_A_Section_2_spatial/spatial/tissue_positions_list.csv', header=FALSE)
-# filename = 'filtered_feature_bc_matrix.h5'
-# filename = 'V1_Breast_Cancer_Block_A_Section_1_filtered_feature_bc_matrix.h5'
+#Set input and output directories
+filepath_data= "~/score_smoothing/data/"
+filepath_output = "~/BA/images Visium/"
+setwd(filepath_data)
+#get coordinates
+coord_tab = read.csv('./spatial/tissue_positions_list.csv', header=FALSE)
+
+#get count matrix
 filename = 'V1_Breast_Cancer_Block_A_Section_2_filtered_feature_bc_matrix.h5'
 
+#Load object
 se = Load10X_Spatial(
-  './V1_Breast_Cancer_Block_A_Section_2_spatial',
+  './',
   filename = filename
 )
+
+#calculate GSEA
 seu <- gseaCalc(se)
-setwd("~/BA/images Visium 2/")
+
 
 coordinates <- GetTissueCoordinates(seu, scale="lowres")
-truth <- readRDS("~/score_smoothing/truth.Rds")
+
+#get true labels
+library(imager)
+
+file_annot = './spatial/tissue_lowres_image_annotated.png'
+im_annot = load.image(file_annot)
+
+der = B(im_annot) %>% liner(thr = 0.58, fill=0) %>%
+  bucketfill(x=200, y=200,color="darkorange",sigma=.2) %>%
+  bucketfill(x=200, y=450, color="darkorange",sigma=.2) %>%
+  bucketfill(x=350, y=330, color="darkorange",sigma=.2) %>%
+  bucketfill(x=420, y=300, color="darkorange",sigma=.2) %>%
+  bucketfill(x=450, y=350, color="darkorange",sigma=.2) %>%
+  bucketfill(x=450, y=400, color="darkorange",sigma=.2) %>%
+  bucketfill(x=480, y=420, color="darkorange",sigma=.2) %>% plot()
+
+
+
+labeled_gray <- grayscale(der)
+
+plot(labeled_gray)
+
+labeled <- as.matrix(labeled_gray)
+
+tumor <- NULL
+coordinates<- GetTissueCoordinates(se, scale="lowres")
+for(i in 1:nrow(coordinates)){
+  row <- round(coordinates[i,1])
+  col <- round(coordinates[i,2])
+  istumor <- labeled[row, col]
+  if(istumor==0){
+    istumor <- 0
+  }else if(istumor > 0.75){
+    istumor <- 0
+  }else{
+    istumor <- 1
+  }
+  tumor <- append(tumor, istumor)
+}
+truth <- tumor
+setwd(filepath_output)
+save.csv(truth, "truth.csv")
 gsea_raw <- seu@meta.data$gsea_rat_norm
 #F1_raw <- F1_quant(gsea_raw, truth, gsea_raw)
 pdf("gsea_raw_5.pdf")
@@ -330,44 +380,5 @@ ggplot(df_long, aes(x = Position, y = Value, color = `Method`)) +
        x = "Quantile as Threshold",
        y = "F1 Score")
 dev.off()
-pdf("plot_nn.pdf")
-plot_quant(gsea_nn[[4]], coordinates, truth, 5)
-dev.off()
-pdf("plot_snn.pdf")
-plot_quant(gsea_snn[[4]], coordinates, truth, 4)
-dev.off()
-pdf("plot_spatial.pdf")
-plot_quant(gsea_spatial[[4]], coordinates, truth, 4)
-dev.off()
 
-pdf("plot_union.pdf")
-plot_quant(gsea_union[[4]], coordinates, truth, 5)
-dev.off()
-pdf("plot_inter.pdf")
-plot_quant(gsea_inter[[4]], coordinates, truth, 3)
-dev.off()
-pdf("plot_alpha.pdf")
-plot_quant(alpha[,16], coordinates, truth, 5)
-dev.off()
-pdf("plot_nn_spatial.pdf")
-plot_quant(nn_spatial[,16], coordinates, truth, 5)
-dev.off()
 
-pdf("plot_snn_spatial.pdf")
-plot_quant(snn_spatial[,16], coordinates, truth, 4)
-dev.off()
-
-compare_df <- as.data.frame(cbind(F1_snn_spatial[[16]]$score, F1_nn_spatial[[16]]$score))
-colnames(compare_df) <- c("snn", "nn")
-compare_df$Position <- 1:nrow(compare_df)
-compare_df$unsmoothed <-F1_raw$score
-df_long <- melt(compare_df, id.vars = "Position", variable.name = "Method", value.name = "Value")  
-
-pdf("F1_compare_2.pdf")
-ggplot(df_long, aes(x = Position, y = Value, color = `Method`)) +
-  geom_point() +
-  theme_minimal() +
-  labs(title = "Comparing snn and nn",
-       x = "Quantile as Threshold",
-       y = "F1 Score")
-dev.off()
