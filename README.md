@@ -23,3 +23,8 @@ After that run "calc_R2_spatialplots_ST.R" (also for every sample) and look insi
 ### Reproduce plot of F1-scores for Visium data:
 Run "run_tests.R" and specify input and output directory. Then look into the F1-plots for every method and choose the best smoothing paramters. Specify the column numbers at the bottom of the script for plotting "F1_best".
 
+### Reproduce table comparing accuracy of thresholding methods for Visium dataset:
+Run "run_test.R" and then "script_accuracy_calc_Visium.R"
+
+### Reproduce R²-compare table/plot:
+Run "calc_R2_spatialplots_visium.R" and "calc_R2_spatialplots_ST.R" (for each sample) and look inside the "_R2.csv"-files to find the best R²-score for each method per sample. Then run "R2_plot.R".
