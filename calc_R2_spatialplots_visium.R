@@ -1,22 +1,21 @@
 library(pscl)
 
 
-letter <- "A1"
 filepath_output = "~/BA/images Visium/"
-setwd(paste(filepath_output, letter, sep=""))
+setwd(filepath_output)
 truth <- read.csv("truth.csv", row.names=1)
 gsea_nn <- read.csv("nn_scores.csv", row.names=1)
 gsea_snn <- read.csv("snn_scores.csv", row.names=1)
-gsea_inter <- read.csv("inter_snn_scores_.csv", row.names=1)
+gsea_inter <- read.csv("inter_snn_scores.csv", row.names=1)
 
 gsea_nn_spatial <- read.csv("nn_spatial_scores.csv", row.names=1)
-gsea_snn_spatial <- read.csv("snn_spatial_scores_.csv", row.names=1)
+gsea_snn_spatial <- read.csv("snn_spatial_scores.csv", row.names=1)
 gsea_spatial <- read.csv("spatial_scores.csv", row.names=1)
-gsea_union<- read.csv("union_scores_.csv", row.names=1)
+gsea_union<- read.csv("union_scores.csv", row.names=1)
 gsea_alpha <- read.csv("alpha_scores.csv", row.names=1)
-gsea_raw <- read.csv("gsea_raw.csv", row.names=1)
+gsea_raw <- read.csv("raw.csv", row.names=1)
 colnames(gsea_raw) <- "gsea"
-truth <- as.vector(truth$V1)
+truth <- as.vector(truth$x)
 
 #making log-regression-models
 log_model <- glm(truth ~ gsea, data = cbind(truth,gsea_raw), family = "binomial")
@@ -25,11 +24,11 @@ write.csv(r_raw, "raw_R2.csv")
 
 l <- c("nn", "spatial", "union", "snn", "inter")
 for (method in l) {
-  temp <- read.csv(paste("~/BA/images ST/", letter, "/", method, "_scores_", letter, ".csv", sep=""), row.names = 1)
+  temp <- read.csv(paste("~/BA/images Visium/", method, "_scores.csv", sep=""), row.names = 1)
   temp <- cbind(truth, temp)
   alphas <- c("alpha2", "alpha4", "alpha6", "alpha8")
   colnames(temp) <-c("truth", "alpha2", "alpha4", "alpha6", "alpha8")
-  write.csv(temp, paste("~/BA/images ST/", letter,"/", method,"_scores_", letter, ".csv", sep=""))
+  write.csv(temp, paste("~/BA/images Visium/", method,"_scores.csv", sep=""))
   model_temp <- list()
   for(i in alphas){
     formula <- paste("truth~",i, sep="")
@@ -42,10 +41,10 @@ l <- c("alpha", "nn_spatial", "snn_spatial")
 alphas <- c("alpha2alpha2","alpha2alpha4", "alpha2alpha6", "alpha2alpha8", "alpha4alpha2", "alpha4alpha4", "alpha4alpha6", "alpha4alpha8", "alpha6alpha2", "alpha6alpha4", "alpha6alpha6", "alpha6alpha8", "alpha8alpha2", "alpha8alpha4", "alpha8alpha6", "alpha8alpha8")
 
 for (method in l) {
-  temp <- read.csv(paste("~/BA/images ST/", letter, "/", method, "_scores_", letter, ".csv", sep=""), row.names = 1)
+  temp <- read.csv(paste("~/BA/images Visium/", method, "_scores.csv", sep=""), row.names = 1)
   temp <- cbind(truth, temp)
   colnames(temp) <-c("truth", alphas)
-  write.csv(temp, paste("~/BA/images ST/", letter,"/", method,"_scores_", letter,".csv", sep=""))
+  write.csv(temp, paste("~/BA/images Visium/", method,"_scores.csv", sep=""))
   model_temp <- list()
   for(i in alphas){
     formula <- paste("truth~",i, sep="")
