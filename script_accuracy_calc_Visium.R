@@ -2,6 +2,7 @@ library(tidyr)
 library(reshape2)
 library(Seurat)
 
+#adjust filepaths
 nn <- read.csv("~/BA/images Visium/nn_scores.csv", row.names=1)[,4]
 snn <- read.csv("~/BA/images Visium/snn_scores.csv", row.names=1)[,4]
 nn_spatial <- read.csv("~/BA/images Visium/nn_spatial_scores.csv", row.names=1)[,16]
