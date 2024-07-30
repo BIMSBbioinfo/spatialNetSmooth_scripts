@@ -1,20 +1,42 @@
-nn_spat <- read.csv("~/BA/images ST/best_thresholds_nn_spatial.csv", row.names=1)
-raw <- read.csv("~/BA/images ST/best_thresholds_raw.csv", row.names=1)
+library(tidyr)
+library(reshape2)
+library(Seurat)
 
-smooth_nn_spat <- nn_spatial_smooth(seu, a1=0.4, a2=0.8)
-smooth_nn_spat <- as.vector(smooth_nn_spat)
-truth<- as.vector(truth)
-pdf("~/BA/images ST/H1/plot_H1_roc.pdf")
-plot_quant(smooth_nn_spat, coordinates, truth)
-dev.off()
+accuracy <- NULL
+accuracy_raw <- NULL
+letters <- c("A1", "B1", "C1", "D1", "E1")
+for (letter in letters) {
+  path <- paste("~/BA/images ST/", letter, "/", sep="")
+  setwd(path)
+  truth <- read.csv("truth.csv", row.names=1)
+  raw <- read.csv("gsea_raw.csv", row.names=1)
+  
+  nn_spatial <- read.csv(paste("nn_spatial_scores_", letter, ".csv", sep=""), row.names=1)[,16]
+  d <-roc_quant(truth$V1, nn_spatial)
+  f <- roc_quant(truth$V1, raw$V1)
+  accuracy_raw <- append(accuracy_raw, f$accuracy)
+  accuracy <- append(accuracy, d$accuracy)
+}
 
-gsea_raw <- as.vector(gsea_raw)
-pdf("~/BA/images ST/H1/plot_H1_raw_roc.pdf")
-plot_quant(gsea_raw, coordinates, truth)
-dev.off()
+letter <- "H1"
+path <- paste("~/BA/images ST/", letter, "/", sep="")
+setwd(path)
+truth <- read.csv("truth.csv", row.names=1)
+raw <- read.csv("gsea_raw.csv", row.names=1)
 
-accuracy <- nn_spat[2,]
-accuracy_raw <- raw[2,]
-accuracy_comp <- rbind(accuracy_raw, accuracy)
-rownames(accuracy_comp) <- c("unsmoothed", "smoothed")
-write.csv(accuracy_comp, "~/BA/images ST/accuracy_comp.csv", row.names=T)
+nn_spatial <- read.csv(paste("nn_spatial_scores_", letter, ".csv", sep=""), row.names=1)[,16]
+d <-roc_quant(truth$V1, nn_spatial)
+f <- roc_quant(truth$V1, raw$V1)
+accuracy_raw <- append(accuracy_raw, f$accuracy)
+accuracy <- append(accuracy, d$accuracy)
+
+
+accuracy <- rbind(accuracy_raw, accuracy)
+rownames(accuracy) <- c("unsmoothed", "smoothed")
+colanmes <-  c(letters, "H1")
+
+setwd("~/BA/images ST/")
+write.csv(accuracy, "accuracy_comp_ST.csv")
+
+
+
