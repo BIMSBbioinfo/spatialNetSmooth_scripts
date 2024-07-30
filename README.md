@@ -24,7 +24,7 @@ Run "calc_R2_spatialplots_ST.R" (for every sample, change "letter" to current sa
 Look into the F1-plots for every method and choose the best-scoring smoothing paramters. Specify the column numbers at the bottom of the script (run_test.R) for plotting "F1_best".
 
 ### Reproduce data for table comparing accuracy of thresholding methods for Visium dataset:
-Run  "script_accuracy_calc_Visium.R". Adjust filepaths.
+Run  "script_accuracy_calc_Visium.R". Adjust filepaths. Choose df columns for the smoothing parameters with best McFaddens R².
 
 ### Reproduce R²-compare table/plot:
 Run "calc_R2_spatialplots_visium.R" and "calc_R2_spatialplots_ST.R" (for each sample) and look inside the "_R2.csv"-files to find the best R²-score for each method per sample. Then run "plot_R2.R" with those values.
