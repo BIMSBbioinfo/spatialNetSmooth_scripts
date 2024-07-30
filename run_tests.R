@@ -34,6 +34,15 @@ library(imager)
 file_annot = './spatial/tissue_lowres_image_annotated.png'
 im_annot = load.image(file_annot)
 
+
+liner = function(mat, der = 5, thr=0.8, fill = 5){
+  mat %>%
+    deriche(der,order=0,axis="x") %>%
+    deriche(der,order=0,axis="y") %>%
+    threshold(thr) %>%
+    fill(fill)
+}
+
 der = B(im_annot) %>% liner(thr = 0.58, fill=0) %>%
   bucketfill(x=200, y=200,color="darkorange",sigma=.2) %>%
   bucketfill(x=200, y=450, color="darkorange",sigma=.2) %>%
@@ -50,6 +59,8 @@ labeled_gray <- grayscale(der)
 plot(labeled_gray)
 
 labeled <- as.matrix(labeled_gray)
+labeled <-labeled[,c(nrow(labeled):1)]
+labeled <- apply(labeled, 1, rev)
 
 tumor <- NULL
 coordinates<- GetTissueCoordinates(se, scale="lowres")
@@ -68,12 +79,13 @@ for(i in 1:nrow(coordinates)){
 }
 truth <- tumor
 setwd(filepath_output)
-save.csv(truth, "truth.csv")
+write.csv(truth, "truth.csv")
 gsea_raw <- seu@meta.data$gsea_rat_norm
-#F1_raw <- F1_quant(gsea_raw, truth, gsea_raw)
-pdf("gsea_raw_5.pdf")
-plot_quant(gsea_raw, coordinates, truth, 5)
+F1_raw <- F1_quant(gsea_raw, truth, gsea_raw)
+pdf("gsea_raw.pdf")
+plot_quant(gsea_raw, coordinates, truth)
 dev.off()
+write.csv(gsea_raw, paste(filepath_output, "raw.csv", sep=""), row.names=T)
 alphas <- c(0.2, 0.4, 0.6, 0.8)
 gsea_spatial <- vector(mode = "list", length = 4)
   for (i in 1:4) {
@@ -102,7 +114,7 @@ write.csv(nn, "nn_scores.csv", row.names = T)
 
 F1_nn <- vector(mode = "list", length = 4)
 for (i in 1:4) {
-  F1_nn[[i]] <- F1_quant(nn[,i], truth)
+  F1_nn[[i]] <- F1_quant(nn[,i], truth,gsea_raw)
   
 }
 
@@ -117,7 +129,7 @@ write.csv(snn, "snn_scores.csv", row.names = T)
 
 F1_snn <- vector(mode = "list", length = 4)
 for (i in 1:4) {
-  F1_snn[[i]] <- F1_quant(snn[,i], truth)
+  F1_snn[[i]] <- F1_quant(snn[,i], truth, gsea_raw)
   
 }
 
@@ -140,7 +152,7 @@ write.csv(nn_spatial, "nn_spatial_scores.csv", row.names = T)
 
 F1_nn_spatial <- vector(mode = "list", length = 16)
 for (i in 1:16) {
-  F1_nn_spatial[[i]] <- F1_quant(nn_spatial[,i], truth)
+  F1_nn_spatial[[i]] <- F1_quant(nn_spatial[,i], truth, gsea_raw)
   
 }
 
@@ -162,7 +174,7 @@ write.csv(snn_spatial, "snn_spatial_scores.csv", row.names = T)
 
 F1_snn_spatial <- vector(mode = "list", length = 16)
 for (i in 1:16) {
-  F1_snn_spatial[[i]] <- F1_quant(snn_spatial[,i], truth)
+  F1_snn_spatial[[i]] <- F1_quant(snn_spatial[,i], truth, gsea_raw)
   
 }
 gsea_union <- vector(mode = "list", length = 4)
@@ -176,7 +188,7 @@ write.csv(union, "union_scores.csv", row.names = T)
 
 F1_union <- vector(mode = "list", length = 4)
 for (i in 1:4) {
-  F1_union[[i]] <- F1_quant(union[,i], truth)
+  F1_union[[i]] <- F1_quant(union[,i], truth, gsea_raw)
   
 }
 
@@ -200,13 +212,13 @@ write.csv(inter_snn, "inter_snn_scores.csv", row.names = T)
 
 F1_inter <- vector(mode = "list", length = 4)
 for (i in 1:4) {
-  F1_inter[[i]] <- F1_quant(inter[,i], truth)
+  F1_inter[[i]] <- F1_quant(inter[,i], truth, gsea_raw)
   
 }
 
 F1_inter_snn <- vector(mode = "list", length = 4)
 for (i in 1:4) {
-  F1_inter_snn[[i]] <- F1_quant(inter_snn[,i], truth)
+  F1_inter_snn[[i]] <- F1_quant(inter_snn[,i], truth, gsea_raw)
   
 }
 
@@ -225,7 +237,7 @@ write.csv(alpha, "alpha_scores.csv", row.names = T)
 
 F1_alpha <- vector(mode = "list", length = 16)
 for (i in 1:16) {
-  F1_alpha[[i]] <- F1_quant(alpha[,i], truth)
+  F1_alpha[[i]] <- F1_quant(alpha[,i], truth, gsea_raw)
   
 }
 nn_df <- as.data.frame(cbind(F1_nn[[1]]$score, F1_nn[[2]]$score, F1_nn[[3]]$score, F1_nn[[4]]$score))
@@ -364,7 +376,7 @@ ggplot(df_long, aes(x = Position, y = Value, color = `Parameters`)) +
   labs(title = "F1 scores for alpha_smoothing",
        x = "Quantile as Threshold",
        y = "F1 Score")
-dev.off()
+dev.off() 
 
 best_df <- as.data.frame(cbind(F1_nn[[4]]$score, F1_snn[[4]]$score, F1_inter_snn[[4]]$score, F1_union[[4]]$score, F1_spatial[[4]]$score, F1_nn_spatial[[16]]$score, F1_alpha[[16]]$score, F1_snn_spatial[[16]]$score))
 colnames(best_df) <- c("nn", "snn", "intersection", "union", "spatial", "nn_spatial", "alpha", "snn_spatial") 
